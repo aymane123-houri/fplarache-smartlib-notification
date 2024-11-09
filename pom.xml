@@ -41,7 +41,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sqs</artifactId>
-            <version>2.20.35</version> <!-- Assurez-vous d'utiliser la dernière version -->
+            <version>2.20.35</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
