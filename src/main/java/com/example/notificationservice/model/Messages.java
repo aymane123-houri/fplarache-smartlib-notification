@@ -3,9 +3,9 @@ package com.example.notificationservice.model;
 import java.util.List;
 
 public class Messages {
-    public String getConfirmationMessage(Emprunt emprunt, User user, Livre livre){
-        return "Salut " + user.getNom() + ",\n"
-                + "Nous avons le plaisir de vous confirmer que vous avez emprunté le livre " + livre.getTitre() + ".\n"
+    public String getConfirmationMessage(Emprunt emprunt){
+        return "Salut " + emprunt.getUser().getNom() + ",\n"
+                + "Nous avons le plaisir de vous confirmer que vous avez emprunté le livre " + emprunt.getLivre().getTitre() + ".\n"
                 + "Nous vous rappelons que la date de retour de ce livre est fixée au " + emprunt.getDateEmprunt() + ". "
                 + "Merci de bien vouloir restituer le livre avant cette date afin de permettre à d’autres utilisateurs d’en profiter.\n"
                 + "En cas de retard, des frais supplémentaires peuvent être appliqués conformément à notre politique de prêt.\n"
