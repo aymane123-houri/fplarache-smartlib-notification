@@ -1,4 +1,4 @@
-package com.example.notificationservice.configuration;
+package fplarache.smartlib.notifications.configuration;
 
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.regions.Region;

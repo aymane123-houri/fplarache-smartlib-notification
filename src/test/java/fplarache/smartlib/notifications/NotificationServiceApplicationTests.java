@@ -1,4 +1,4 @@
-package com.example.notificationservice;
+package fplarache.smartlib.notifications;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
