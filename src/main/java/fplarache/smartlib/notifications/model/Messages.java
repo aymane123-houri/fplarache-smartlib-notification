@@ -1,6 +1,4 @@
-package com.example.notificationservice.model;
-
-import java.util.List;
+package fplarache.smartlib.notifications.model;
 
 public class Messages {
     public String getConfirmationMessage(Emprunt emprunt){

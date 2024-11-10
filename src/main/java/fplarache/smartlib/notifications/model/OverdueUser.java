@@ -1,4 +1,4 @@
-package com.example.notificationservice.model;
+package fplarache.smartlib.notifications.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

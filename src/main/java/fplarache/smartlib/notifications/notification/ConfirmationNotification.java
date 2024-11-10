@@ -1,6 +1,6 @@
-package com.example.notificationservice.notification;
+package fplarache.smartlib.notifications.notification;
 
-import com.example.notificationservice.model.Emprunt;
+import fplarache.smartlib.notifications.model.Emprunt;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
