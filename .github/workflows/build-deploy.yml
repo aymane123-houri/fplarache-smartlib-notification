@@ -7,10 +7,6 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+-dev"
       - "v[0-9]+.[0-9]+.[0-9]+-prod"
 
-env:
-  APPLICATION: "smartlib"
-  SERVICE: "notification-service"
-
 jobs:
   deploy:
     name: "Deploy Java Application"
@@ -26,44 +22,34 @@ jobs:
           java-version: 17
           distribution: 'temurin'
 
-      - name: Extract branch name
-        id: extract_branch
-        run: |
-          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
-
-      - name: Set environment variables
-        id: vars
-        run: |
-          echo "environment=${{ steps.extract_branch.outputs.branch }}" >> $GITHUB_ENV
-          echo "fullServiceName=${{ steps.extract_branch.outputs.branch }}-${{ env.APPLICATION }}-${{ env.SERVICE }}" >> $GITHUB_ENV
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.DEV_ADMIN_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.DEV_ADMIN_AWS_SECRET_KEY }}
           aws-region: "eu-north-1"
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build Java application
-        run: mvn clean package -DskipTests
-
-      - name: Publish Docker image
+      - name: Build and Publish Docker image
         uses: ./.github/actions/publish-api-image
         with:
-          dockerfile: Dockerfile
-          main-class: "fplarache.smartlib.notifications"
-          image-short-name: "repo"
-          image-prefix: ${{ env.fullServiceName }}
+          dockerfile: './Dockerfile'
+          main-class: 'fplarache.smartlib.notifications'
+          image-short-name: 'notification-service'
+          image-prefix: 'smartlib'
           image-tag: ${{ github.sha }}
-          ecr-registry: "774305596814.dkr.ecr.eu-north-1.amazonaws.com"
+          ecr-registry: '774305596814.dkr.ecr.eu-north-1.amazonaws.com'
 
-      - name: Deploy ECS service
+      - name: Deploy to ECS
+        env:
+          ECS_CLUSTER: ${{ github.ref_name }}-fgcluster
+          ECS_SERVICE: ${{ github.ref_name }}-fgservice
         run: |
-          echo ">> Triggering ECS deployment..."
+          echo "Deploying to ECS..."
           aws ecs update-service \
-            --force-new-deployment \
-            --cluster ${{ env.fullServiceName }}-fgcluster \
-            --service ${{ env.fullServiceName }}-fgservice
+            --cluster ${ECS_CLUSTER} \
+            --service ${ECS_SERVICE} \
+            --force-new-deployment
+          echo "ECS deployment triggered successfully."
