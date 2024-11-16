@@ -51,13 +51,8 @@ jobs:
           if [ "${ENVIRONMENT}" = "dev" ]; then
             echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
             echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
-            echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
-          elif [ "${ENVIRONMENT}" = "prod" ]; then
-            echo "awsAccessKey=PROD_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
-            echo "awsSecretKey=PROD_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
-            echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
+            echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
           fi
-
           echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
 
       # Étape 5 : Configurer AWS
@@ -66,7 +61,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.DEV_ADMIN_AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.DEV_ADMIN_AWS_SECRET_KEY }}
-          aws-region: "eu-west-1"
+          aws-region: "eu-north-1"
 
       # Étape 6 : Login à Amazon ECR
       - name: Login to Amazon ECR
