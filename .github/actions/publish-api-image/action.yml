@@ -23,17 +23,15 @@ inputs:
     default: 'service-notification-repo'
 
   image-tag:
-    description: 'Tag for the Docker image'
+    description: 'Tag for the Docker image (e.g., SHA or version)'
     required: true
-    default: 'v1.0.0'
 
   ecr-registry:
     description: 'AWS ECR registry'
     required: true
-    default: '774305596814.dkr.ecr.eu-north-1.amazonaws.com'
 
   maven-environment:
-    description: 'Maven build environment'
+    description: 'Maven build environment (e.g., dev, prod)'
     required: true
 
 runs:
@@ -41,21 +39,21 @@ runs:
   steps:
     - shell: bash
       run: |
-        # Définir le nom complet de l'image
+        # Construire le nom complet de l'image
         export IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
-        
-        echo "Building Java project with Maven..."
-        mvn clean package -DskipTests
-        
-        echo "Building Docker image..."
+
+        echo ">> Building Java project with Maven..."
+        mvn clean package -DskipTests || { echo "Maven build failed!"; exit 1; }
+
+        echo ">> Building Docker image..."
         docker build \
           --build-arg JAVA_MAIN_CLASS=${{ inputs.main-class }} \
           -f ${{ inputs.dockerfile }} \
-          -t $IMAGENAME:${{ inputs.image-tag }} .
-        
-        echo "Tagging Docker image..."
+          -t $IMAGENAME:${{ inputs.image-tag }} . || { echo "Docker build failed!"; exit 1; }
+
+        echo ">> Tagging Docker image..."
         docker tag $IMAGENAME:${{ inputs.image-tag }} $IMAGENAME:latest
-        
-        echo "Pushing Docker image to ECR..."
-        docker push $IMAGENAME:${{ inputs.image-tag }}
+
+        echo ">> Pushing Docker image to ECR..."
+        docker push $IMAGENAME:${{ inputs.image-tag }} || { echo "Docker push failed!"; exit 1; }
         docker push $IMAGENAME:latest
