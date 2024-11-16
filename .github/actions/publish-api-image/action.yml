@@ -23,37 +23,41 @@ inputs:
     default: 'service-notification-repo'
 
   image-tag:
-    description: 'Tag for the Docker image (e.g., SHA or version)'
+    description: 'Tag for the Docker image'
     required: true
+    default: 'v1.0.0'
 
   ecr-registry:
     description: 'AWS ECR registry'
     required: true
-
-  maven-environment:
-    description: 'Maven build environment (e.g., dev, prod)'
-    required: true
+    default: '774305596814.dkr.ecr.eu-north-1.amazonaws.com'
 
 runs:
   using: "composite"
   steps:
-    - shell: bash
+    - name: Build Java project with Maven
+      shell: bash
+      run: mvn clean package -DskipTests
+
+    - name: Build Docker image
+      shell: bash
       run: |
-        # Construire le nom complet de l'image
-        export IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
-
-        echo ">> Building Java project with Maven..."
-        mvn clean package -DskipTests || { echo "Maven build failed!"; exit 1; }
-
-        echo ">> Building Docker image..."
+        IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
         docker build \
           --build-arg JAVA_MAIN_CLASS=${{ inputs.main-class }} \
           -f ${{ inputs.dockerfile }} \
-          -t $IMAGENAME:${{ inputs.image-tag }} . || { echo "Docker build failed!"; exit 1; }
+          -t $IMAGENAME:${{ inputs.image-tag }} .
+        echo "Docker image built: $IMAGENAME:${{ inputs.image-tag }}"
 
-        echo ">> Tagging Docker image..."
+    - name: Tag Docker image
+      shell: bash
+      run: |
+        IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
         docker tag $IMAGENAME:${{ inputs.image-tag }} $IMAGENAME:latest
 
-        echo ">> Pushing Docker image to ECR..."
-        docker push $IMAGENAME:${{ inputs.image-tag }} || { echo "Docker push failed!"; exit 1; }
+    - name: Push Docker image to ECR
+      shell: bash
+      run: |
+        IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
+        docker push $IMAGENAME:${{ inputs.image-tag }}
         docker push $IMAGENAME:latest
