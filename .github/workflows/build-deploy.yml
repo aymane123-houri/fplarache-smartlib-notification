@@ -49,10 +49,10 @@ jobs:
             echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
             echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
             echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
-          elif [ "${ENVIRONMENT}" = "prod" ]; then
-            echo "awsAccessKey=PROD_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
-            echo "awsSecretKey=PROD_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
-            echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
+          #elif [ "${ENVIRONMENT}" = "prod" ]; then
+            #echo "awsAccessKey=PROD_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
+            #echo "awsSecretKey=PROD_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
+            #echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
           fi
           echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
 
