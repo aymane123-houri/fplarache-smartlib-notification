@@ -81,6 +81,12 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Verify Amazon ECR login
+        run: |
+          echo "Verifying Amazon ECR login..."
+          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 774305596814.dkr.ecr.eu-north-1.amazonaws.com
+          echo "Amazon ECR login successful."
+
       # Étape 7 : Construire l'application Java avec Maven
       - name: Build Java application
         run: mvn clean package -DskipTests
