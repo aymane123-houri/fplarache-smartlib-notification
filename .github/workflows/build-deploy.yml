@@ -1,0 +1,100 @@
+name: Deploy Java Application
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+-dev"
+      - "v[0-9]+.[0-9]+.[0-9]+-prod"
+
+env:
+  BEFORE_SHA: ${{ github.event.before }}
+
+jobs:
+  setup:
+    name: "Deploy"
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Cloner le dépôt
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Étape 2 : Configurer Maven
+      - name: Setup Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      # Étape 3 : Extraire le nom de la branche
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      # Étape 4 : Définir les variables
+      - name: Set vars
+        id: vars
+        env:
+          ENVIRONMENT: ${{ steps.extract_branch.outputs.branch }}
+          APPLICATION: docscreen
+          SERVICE: webapi
+        run: |
+          echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
+          echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
+          echo "service=${SERVICE}" >> $GITHUB_OUTPUT
+          if [ "${ENVIRONMENT}" = "dev" ]; then
+            echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
+            echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
+            echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
+          elif [ "${ENVIRONMENT}" = "prod" ]; then
+            echo "awsAccessKey=PROD_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
+            echo "awsSecretKey=PROD_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
+            echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
+          fi
+          echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
+
+      # Étape 5 : Configurer AWS
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets[steps.vars.outputs.awsAccessKey] }}
+          aws-secret-access-key: ${{ secrets[steps.vars.outputs.awsSecretKey] }}
+          aws-region: "eu-west-1"
+
+      # Étape 6 : Login à Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Étape 7 : Construire l'application Java
+      - name: Build Java application with Maven
+        run: |
+          mvn clean package -DskipTests
+
+      # Étape 8 : Publier une image Docker
+      - name: Publish API image - WebApi
+        id: publish-webapi-image
+        uses: ./.github/actions/publish-api-image
+        with:
+          aspnetcore-environment: ${{ steps.vars.outputs.environment }}
+          published-app: target/app.jar
+          dockerfile: Dockerfile.api
+          cmd: "java -jar app.jar"
+          image-short-name: repo
+          image-prefix: ${{ steps.vars.outputs.fullServiceName }}
+          image-tag: ${{ github.sha }}
+          ecr-registry: ${{ steps.login-ecr.outputs.registry }}
+
+      # Étape 9 : Déployer sur ECS
+      - name: Deploy ECS - WebApi
+        env:
+          ECS_CLUSTER: ${{ steps.vars.outputs.fullServiceName }}-fgcluster
+          ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-fgservice
+        run: |
+          TASK_JSON="$(aws ecs update-service --force-new-deployment --cluster ${ECS_CLUSTER} --service ${ECS_SERVICE})"
+          TASK_ARN="$(printf '%s' "${TASK_JSON}"|jq -r '.service.deployments[0].id')"
+          echo "deployment-arn=$TASK_ARN" >> $GITHUB_OUTPUT
