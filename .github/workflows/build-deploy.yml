@@ -40,7 +40,7 @@ jobs:
         id: vars
         env:
           ENVIRONMENT: ${{ steps.extract_branch.outputs.branch }}
-          APPLICATION: smartLib
+          APPLICATION: smartlib
           SERVICE: notification-service
         run: |
           echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
