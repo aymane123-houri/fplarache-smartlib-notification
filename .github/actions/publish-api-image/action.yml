@@ -1,4 +1,4 @@
-name: 'publish api image'
+name: 'publish-api-image'
 description: 'Publish API Image to AWS ECR'
 
 inputs:
@@ -32,20 +32,30 @@ inputs:
     required: true
     default: '774305596814.dkr.ecr.eu-north-1.amazonaws.com'
 
+  maven-environment:
+    description: 'Maven build environment'
+    required: true
+
 runs:
   using: "composite"
   steps:
     - shell: bash
       run: |
+        # Définir le nom complet de l'image
         export IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
         
-        # Construction du projet Maven
+        echo "Building Java project with Maven..."
         mvn clean package -DskipTests -P${{ inputs.maven-environment }}
         
-        # Construire l'image Docker
-        docker build --build-arg JAVA_MAIN_CLASS=${{ inputs.main-class }} -f ${{ inputs.dockerfile }} -t $IMAGENAME:${{ inputs.image-tag }} .
+        echo "Building Docker image..."
+        docker build \
+          --build-arg JAVA_MAIN_CLASS=${{ inputs.main-class }} \
+          -f ${{ inputs.dockerfile }} \
+          -t $IMAGENAME:${{ inputs.image-tag }} .
         
-        # Tagging et push
+        echo "Tagging Docker image..."
         docker tag $IMAGENAME:${{ inputs.image-tag }} $IMAGENAME:latest
+        
+        echo "Pushing Docker image to ECR..."
         docker push $IMAGENAME:${{ inputs.image-tag }}
         docker push $IMAGENAME:latest
