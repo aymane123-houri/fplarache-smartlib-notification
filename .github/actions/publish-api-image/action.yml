@@ -2,11 +2,6 @@ name: 'publish api image'
 description: 'Publish API Image to AWS ECR'
 
 inputs:
-  maven-environment:
-    description: 'Maven environment to use (e.g., dev or prod)'
-    required: true
-    default: 'dev'
-
   dockerfile:
     description: 'Path to the Dockerfile'
     required: true
