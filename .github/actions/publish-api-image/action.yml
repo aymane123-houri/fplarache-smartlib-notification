@@ -37,7 +37,7 @@ inputs:
 outputs:
   image-uri:
     description: 'URI of the Docker image'
-    value: ${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}:${{ inputs.image-tag }}
+    value: ${{ inputs.ecr-registry }}/dev-fpl-larache-smart-lib-service-notification-repo:${{ inputs.image-tag }}
 
 runs:
   using: "composite"
