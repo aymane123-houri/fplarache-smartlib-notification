@@ -7,21 +7,69 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+-dev"
       - "v[0-9]+.[0-9]+.[0-9]+-prod"
 
+env:
+  BEFORE_SHA: ${{ github.event.before }}
+
 jobs:
-  deploy:
+  setup:
     name: "Deploy Java Application"
     runs-on: ubuntu-latest
 
     steps:
+      # Étape 1 : Cloner le dépôt
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
+      # Étape 2 : Configurer Maven
       - name: Setup Maven
         uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: 'temurin'
 
+      # Étape 3 : Extraire le nom de la branche
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      # Étape 4 : Définir les variables
+      - name: Set environment variables
+        id: vars
+        env:
+          ENVIRONMENT: ${{ steps.extract_branch.outputs.branch }}
+          APPLICATION: smartlib
+          SERVICE: notification-service
+        run: |
+          echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
+          echo "service=${SERVICE}" >> $GITHUB_OUTPUT
+
+          echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
+          echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
+          echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
+            
+          echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
+# Étape temporaire pour vérifier les clés
+      - name: Verify AWS credentials
+        run: |
+          if [ -z "${{ secrets.DEV_ADMIN_AWS_ACCESS_KEY }}" ]; then
+            echo "AWS_ACCESS_KEY_ID is not set!"
+            exit 1
+          else
+            echo "AWS_ACCESS_KEY_ID is set!"
+          fi
+      
+          if [ -z "${{ secrets.DEV_ADMIN_AWS_SECRET_KEY }}" ]; then
+            echo "AWS_SECRET_ACCESS_KEY is not set!"
+            exit 1
+          else
+            echo "AWS_SECRET_ACCESS_KEY is set!"
+          fi
+
+      # Étape 5 : Configurer AWS
+      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -29,27 +77,37 @@ jobs:
           aws-secret-access-key: ${{ secrets.DEV_ADMIN_AWS_SECRET_KEY }}
           aws-region: "eu-north-1"
 
+      # Étape 6 : Login à Amazon ECR
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and Publish Docker image
+      # Étape 7 : Construire l'application Java avec Maven
+      - name: Build Java application
+        run: mvn clean package -DskipTests
+
+      # Étape 8 : Publier l'image Docker sur ECR
+      - name: Publish Docker image
+        id: publish-image
         uses: ./.github/actions/publish-api-image
         with:
-          dockerfile: './Dockerfile'
-          main-class: 'fplarache.smartlib.notifications'
-          image-short-name: 'notification-service'
-          image-prefix: 'smartlib'
+          maven-environment: ${{ steps.vars.outputs.environment }}
+          dockerfile: Dockerfile
+          main-class: "fplarache.smartlib.notifications"
+          image-short-name: repo
+          image-prefix: ${{ steps.vars.outputs.fullServiceName }}
           image-tag: ${{ github.sha }}
-          ecr-registry: '774305596814.dkr.ecr.eu-north-1.amazonaws.com'
+          ecr-registry: ${{ steps.vars.outputs.fullServiceName }}
 
-      - name: Deploy to ECS
+      # Étape 9 : Déployer sur ECS
+      - name: Deploy ECS service
         env:
-          ECS_CLUSTER: ${{ github.ref_name }}-fgcluster
-          ECS_SERVICE: ${{ github.ref_name }}-fgservice
+          ECS_CLUSTER: ${{ steps.vars.outputs.fullServiceName }}-fgcluster
+          ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-fgservice
         run: |
-          echo "Deploying to ECS..."
-          aws ecs update-service \
+          echo "Triggering ECS deployment..."
+          TASK_JSON=$(aws ecs update-service \
+            --force-new-deployment \
             --cluster ${ECS_CLUSTER} \
-            --service ${ECS_SERVICE} \
-            --force-new-deployment
-          echo "ECS deployment triggered successfully."
+            --service ${ECS_SERVICE})
+          TASK_ARN=$(printf '%s' "${TASK_JSON}" | jq -r '.service.deployments[0].id')
+          echo "deployment-arn=${TASK_ARN}" >> $GITHUB_OUTPUT
