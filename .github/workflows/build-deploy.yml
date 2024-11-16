@@ -51,8 +51,25 @@ jobs:
           echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
             
           echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
+# Étape temporaire pour vérifier les clés
+      - name: Verify AWS credentials
+        run: |
+          if [ -z "${{ secrets.DEV_ADMIN_AWS_ACCESS_KEY }}" ]; then
+            echo "AWS_ACCESS_KEY_ID is not set!"
+            exit 1
+          else
+            echo "AWS_ACCESS_KEY_ID is set!"
+          fi
+      
+          if [ -z "${{ secrets.DEV_ADMIN_AWS_SECRET_KEY }}" ]; then
+            echo "AWS_SECRET_ACCESS_KEY is not set!"
+            exit 1
+          else
+            echo "AWS_SECRET_ACCESS_KEY is set!"
+          fi
 
       # Étape 5 : Configurer AWS
+      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
