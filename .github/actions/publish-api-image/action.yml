@@ -20,11 +20,11 @@ inputs:
   
   image-short-name:
     description: 'Short name of the Docker image'
-    default: 'smartlib-notification'  
+    default: 'dev-fpl-larache-smart-lib'  
   
   image-prefix:
     description: 'Prefix for the Docker image'
-    default: 'smartlib-notifications'  
+    default: 'service-notification-repo'  
   
   image-tag:
     description: 'Tag for the Docker image'
@@ -37,7 +37,7 @@ inputs:
 outputs:
   image-uri:
     description: 'URI of the Docker image'
-    value: ${{ inputs.ecr-registry }}/dev-fpl-larache-smart-lib-service-notification-repo:${{ inputs.image-tag }}
+    value: ${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
 
 runs:
   using: "composite"
