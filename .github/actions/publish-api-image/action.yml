@@ -8,7 +8,7 @@ inputs:
   
   maven-project-path:
     description: 'Path to the Maven project (default: root)'
-    default: './fplarache-smartlib-notification' 
+    default: '.' 
   
   dockerfile:
     description: 'Path to the Dockerfile'
