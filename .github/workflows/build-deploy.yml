@@ -40,19 +40,16 @@ jobs:
         id: vars
         env:
           ENVIRONMENT: ${{ steps.extract_branch.outputs.branch }}
-          APPLICATION: docscreen
-          SERVICE: webapi
+          APPLICATION: smartLib
+          SERVICE: notification-service
         run: |
-          echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
           echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
           echo "service=${SERVICE}" >> $GITHUB_OUTPUT
 
-          # Configuration pour l'environnement
-          if [ "${ENVIRONMENT}" = "dev" ]; then
-            echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
-            echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
-            echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
-          fi
+          echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
+          echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
+          echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
+            
           echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
 
       # Étape 5 : Configurer AWS
