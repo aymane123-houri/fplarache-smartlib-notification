@@ -32,32 +32,30 @@ inputs:
     required: true
     default: '774305596814.dkr.ecr.eu-north-1.amazonaws.com'
 
+  maven-environment:
+    description: 'Maven build environment'
+    required: true
+
 runs:
   using: "composite"
   steps:
-    - name: Build Java project with Maven
-      shell: bash
-      run: mvn clean package -DskipTests
-
-    - name: Build Docker image
-      shell: bash
+    - shell: bash
       run: |
-        IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
+        # Définir le nom complet de l'image
+        export IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
+        
+        echo "Building Java project with Maven..."
+        mvn clean package -DskipTests
+        
+        echo "Building Docker image..."
         docker build \
           --build-arg JAVA_MAIN_CLASS=${{ inputs.main-class }} \
           -f ${{ inputs.dockerfile }} \
           -t $IMAGENAME:${{ inputs.image-tag }} .
-        echo "Docker image built: $IMAGENAME:${{ inputs.image-tag }}"
-
-    - name: Tag Docker image
-      shell: bash
-      run: |
-        IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
+        
+        echo "Tagging Docker image..."
         docker tag $IMAGENAME:${{ inputs.image-tag }} $IMAGENAME:latest
-
-    - name: Push Docker image to ECR
-      shell: bash
-      run: |
-        IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
+        
+        echo "Pushing Docker image to ECR..."
         docker push $IMAGENAME:${{ inputs.image-tag }}
         docker push $IMAGENAME:latest
