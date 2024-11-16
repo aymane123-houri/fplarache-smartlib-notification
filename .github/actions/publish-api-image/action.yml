@@ -45,7 +45,7 @@ runs:
         export IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
         
         echo "Building Java project with Maven..."
-        mvn clean package -DskipTests -P${{ inputs.maven-environment }}
+        mvn clean package -DskipTests
         
         echo "Building Docker image..."
         docker build \
