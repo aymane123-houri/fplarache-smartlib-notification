@@ -39,9 +39,9 @@ jobs:
       - name: Set environment variables
         id: vars
         env:
-          ENVIRONMENT: ${{ steps.extract_branch.outputs.branch }}
+          ENVIRONMENT: dev-fplarache
           APPLICATION: smartlib
-          SERVICE: notification-service
+          SERVICE: notification
         run: |
           echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
           echo "service=${SERVICE}" >> $GITHUB_OUTPUT
@@ -109,7 +109,7 @@ jobs:
       - name: Deploy ECS service
         env:
           ECS_CLUSTER: ${{ steps.vars.outputs.fullServiceName }}-fgcluster
-          ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-fgservice
+          ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-service
         run: |
           echo "Triggering ECS deployment..."
           TASK_JSON=$(aws ecs update-service \
