@@ -20,7 +20,7 @@ inputs:
   image-prefix:
     description: 'Prefix for the Docker image'
     required: true
-    default: 'service-notification-repo'
+    default: 'dev-fpl-larache-smart-lib-service-notification-repo'
 
   image-tag:
     description: 'Tag for the Docker image'
