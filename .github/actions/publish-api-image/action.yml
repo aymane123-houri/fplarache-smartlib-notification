@@ -57,5 +57,6 @@ runs:
         docker tag $IMAGENAME:${{ inputs.image-tag }} $IMAGENAME:latest
         
         echo "Pushing Docker image to ECR..."
+        docker login
         docker push $IMAGENAME:${{ inputs.image-tag }}
         docker push $IMAGENAME:latest
