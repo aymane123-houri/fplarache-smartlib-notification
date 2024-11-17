@@ -15,7 +15,7 @@ inputs:
   image-short-name:
     description: 'Short name of the Docker image'
     required: true
-    default: 'dev-fpl-larache-smart-lib'
+    
 
   image-prefix:
     description: 'Prefix for the Docker image'
@@ -42,7 +42,7 @@ runs:
     - shell: bash
       run: |
         # Définir le nom complet de l'image
-        export IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}-${{ inputs.image-short-name }}
+        export IMAGENAME=${{ inputs.ecr-registry }}/${{ inputs.image-prefix }}
         
         echo "Building Java project with Maven..."
         mvn clean package -DskipTests
