@@ -35,13 +35,23 @@ jobs:
         shell: bash
         run: |
           echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
-        
+          
+      - name: Debug branch extraction
+        run: |
+          echo "Branch: ${{ steps.extract_branch.outputs.branch }}"
+
+          
       - name: Is Prerelease
         uses: winterjung/split@v2
         id: split_pre
         with:
           msg: ${{ steps.extract_branch.outputs.branch }}
           separator: "-"  # Séparateur utilisé pour découper le nom de la branche
+
+      - name: Debug branch parts
+        run: |
+          echo "Extracted part 1: ${{ steps.split_pre.outputs._1 }}"
+          echo "Extracted part 2: ${{ steps.split_pre.outputs._2 }}"
 
 
       # Étape 4 : Définir les variables
@@ -127,7 +137,7 @@ jobs:
           dockerfile: './Dockerfile'
           main-class: "fplarache.smartlib.notifications"
           image-short-name: repo
-          image-prefix: "${{ steps.split_pre.outputs._2 }}-fpl-larache-smart-lib-service-notification-repo"
+          image-prefix: "${{ env.environment }}-fpl-larache-smart-lib-service-notification-repo"
           image-tag: ${{ github.sha }}
           ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
