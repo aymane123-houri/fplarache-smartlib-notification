@@ -111,20 +111,20 @@ jobs:
           dockerfile: './Dockerfile'
           main-class: "fplarache.smartlib.notifications"
           image-short-name: repo
-          image-prefix: dev-fpl-larache-smart-lib-service-notification-repo
+          image-prefix: ${{ steps.extract_env.outputs.environment }}-fpl-larache-smart-lib-service-notification-repo
           image-tag: ${{ github.sha }}
           ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
       # Étape 9 : Déployer sur ECS
-      #- name: Deploy ECS service
-       # env:
-        #  ECS_CLUSTER: ${{ steps.vars.outputs.fullServiceName }}-fgcluster
-         # ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-service
-        #run: |
-         # echo "Triggering ECS deployment..."
-          #TASK_JSON=$(aws ecs update-service \
-            #--force-new-deployment \
-            #--cluster ${ECS_CLUSTER} \
-            #--service ${ECS_SERVICE})
-          #TASK_ARN=$(printf '%s' "${TASK_JSON}" | jq -r '.service.deployments[0].id')
-          #echo "deployment-arn=${TASK_ARN}" >> $GITHUB_OUTPUT
+      - name: Deploy ECS service
+        env:
+          ECS_CLUSTER: ${{ steps.vars.outputs.fullServiceName }}-fgcluster
+          ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-service
+        run: |
+          echo "Triggering ECS deployment..."
+          TASK_JSON=$(aws ecs update-service \
+            --force-new-deployment \
+            --cluster ${ECS_CLUSTER} \
+            --service ${ECS_SERVICE})
+          TASK_ARN=$(printf '%s' "${TASK_JSON}" | jq -r '.service.deployments[0].id')
+          echo "deployment-arn=${TASK_ARN}" >> $GITHUB_OUTPUT
