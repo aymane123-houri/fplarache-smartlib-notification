@@ -5,12 +5,11 @@ inputs:
   dockerfile:
     description: 'Path to the Dockerfile'
     required: true
-    default: './Dockerfile'
-
+    
   main-class:
     description: 'Main class or entry point for the Java application'
     required: true
-    default: 'fplarache.smartlib.notifications'
+    
 
   image-short-name:
     description: 'Short name of the Docker image'
@@ -20,12 +19,12 @@ inputs:
   image-prefix:
     description: 'Prefix for the Docker image'
     required: true
-    default: 'dev-fpl-larache-smart-lib-service-notification-repo'
+    
 
   image-tag:
     description: 'Tag for the Docker image'
     required: true
-    default: 'v1.0.0'
+    
 
   ecr-registry:
     description: 'AWS ECR registry'
