@@ -124,7 +124,7 @@ jobs:
 
       - name: Debug Variables
         run: |
-          echo "Environment: ${{ env.ENVIRONMENT }}"
+          echo "Environment: ${{ steps.vars.outputs.environment }}"
           echo "Image Prefix: ${{ steps.vars.outputs.image-prefix }}"
           echo "Image Tag: ${{ github.sha }}"
           
@@ -137,7 +137,7 @@ jobs:
           dockerfile: './Dockerfile'
           main-class: "fplarache.smartlib.notifications"
           image-short-name: repo
-          image-prefix: "${{ env.ENVIRONMENT }}-fpl-larache-smart-lib-service-notification-repo"
+          image-prefix: "${{ steps.vars.outputs.environment }}-fpl-larache-smart-lib-service-notification-repo"
           image-tag: ${{ github.sha }}
           ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
