@@ -46,6 +46,8 @@ jobs:
           echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
           echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
           echo "service=${SERVICE}" >> $GITHUB_OUTPUT
+          echo "${ENVIRONMENT}"
+
           if [ "${ENVIRONMENT}" = "dev" ]; then
             echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
             echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
