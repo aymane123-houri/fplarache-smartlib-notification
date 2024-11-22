@@ -107,7 +107,7 @@ jobs:
         uses: ./.github/actions/publish-api-image
         with:
           maven-environment: ${{ steps.vars.outputs.environment }}
-          dockerfile: Dockerfile
+          dockerfile: './Dockerfile'
           main-class: "fplarache.smartlib.notifications"
           image-short-name: repo
           image-prefix: dev-fpl-larache-smart-lib-service-notification-repo
