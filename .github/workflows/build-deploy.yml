@@ -111,7 +111,7 @@ jobs:
           dockerfile: './Dockerfile'
           main-class: "fplarache.smartlib.notifications"
           image-short-name: repo
-          image-prefix: ${{ steps.extract_env.outputs.environment }}-fpl-larache-smart-lib-service-notification-repo
+          image-prefix: "${{ steps.vars.outputs.environment }}-fpl-larache-smart-lib-service-notification-repo"
           image-tag: ${{ github.sha }}
           ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
