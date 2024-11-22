@@ -59,7 +59,7 @@ jobs:
         id: vars
         env:
           ENVIRONMENT: ${{ steps.split_pre.outputs._1 }} 
-          APPLICATION: smartlib
+          APPLICATION: fplarache-smartlib
           SERVICE: notification
         run: |
           echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
