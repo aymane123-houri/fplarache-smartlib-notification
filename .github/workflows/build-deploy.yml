@@ -16,141 +16,68 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Étape 1 : Cloner le dépôt
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # Étape 2 : Configurer Maven
-      - name: Setup Maven
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: temurin
 
-      # Étape 3 : Extraire le nom de la branche et définir l'environnement
-      - name: Extract branch name
-        id: extract_branch
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Extract branch name or tag
+        id: extract_ref
+        run: |
+          if [[ $GITHUB_REF == refs/heads/* ]]; then
+            echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          elif [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "branch=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          fi
         shell: bash
-        run: |
-          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
-          
-      - name: Debug branch extraction
-        run: |
-          echo "Branch: ${{ steps.extract_branch.outputs.branch }}"
 
-          
-      - name: Is Prerelease
-        uses: winterjung/split@v2
-        id: split_pre
-        with:
-          msg: ${{ steps.extract_branch.outputs.branch }}
-          separator: "-"  # Séparateur utilisé pour découper le nom de la branche
-
-      - name: Debug branch parts
-        run: |
-          echo "Extracted part 1: ${{ steps.split_pre.outputs._1 }}"
-          echo "Extracted part 2: ${{ steps.split_pre.outputs._2 }}"
-
-
-      # Étape 4 : Définir les variables
       - name: Set environment variables
         id: vars
-        env:
-          ENVIRONMENT: ${{ steps.split_pre.outputs._1 }} 
-          APPLICATION: smartlib
-          SERVICE: notification
         run: |
-          echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
-          echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
-          echo "service=${SERVICE}" >> $GITHUB_OUTPUT
-          echo "${ENVIRONMENT}"
+          ENVIRONMENT=$(echo "${branch}" | grep -oE "dev|prod" || echo "unknown")
+          echo "ENVIRONMENT=${ENVIRONMENT}" >> $GITHUB_ENV
+          echo "APPLICATION=smartlib" >> $GITHUB_ENV
+          echo "SERVICE=notification" >> $GITHUB_ENV
+          echo "fullServiceName=${ENVIRONMENT}-smartlib-notification" >> $GITHUB_ENV
 
-          if [ "${ENVIRONMENT}" = "dev" ]; then
-            echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
-            echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
-            echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
-            echo "aspnetCoreEnvironment=Development" >> $GITHUB_OUTPUT
-          elif [ "${ENVIRONMENT}" = "prod" ]; then
-            echo "awsAccessKey=PROD_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
-            echo "awsSecretKey=PROD_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
-            echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
-            echo "aspnetCoreEnvironment=Production" >> $GITHUB_OUTPUT
-          fi
-            
-          echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
-# Étape temporaire pour vérifier les clés
-      - name: Verify AWS credentials
-        run: |
-          if [ -z "${{ secrets.DEV_ADMIN_AWS_ACCESS_KEY }}" ]; then
-            echo "AWS_ACCESS_KEY_ID is not set!"
-            exit 1
-          else
-            echo "AWS_ACCESS_KEY_ID is set!"
-          fi
-      
-          if [ -z "${{ secrets.DEV_ADMIN_AWS_SECRET_KEY }}" ]; then
-            echo "AWS_SECRET_ACCESS_KEY is not set!"
-            exit 1
-          else
-            echo "AWS_SECRET_ACCESS_KEY is set!"
-          fi
-
-      # Étape 5 : Configurer AWS
-      
       - name: Configure AWS credentials
+        if: env.ENVIRONMENT != 'unknown'
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.DEV_ADMIN_AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.DEV_ADMIN_AWS_SECRET_KEY }}
+          aws-access-key-id: ${{ secrets[env.ENVIRONMENT | upper | append('_ADMIN_AWS_ACCESS_KEY')] }}
+          aws-secret-access-key: ${{ secrets[env.ENVIRONMENT | upper | append('_ADMIN_AWS_SECRET_KEY')] }}
           aws-region: "eu-north-1"
 
-      # Étape 6 : Login à Amazon ECR
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Verify Amazon ECR login
-        run: |
-          echo "Verifying Amazon ECR login..."
-          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 774305596814.dkr.ecr.eu-north-1.amazonaws.com
-          echo "Amazon ECR login successful."
-
-      # Étape 7 : Construire l'application Java avec Maven
       - name: Build Java application
         run: mvn clean package -DskipTests
 
-
-      - name: Debug Variables
-        run: |
-          echo "Environment: ${{ env.ENVIRONMENT }}"
-          echo "Image Prefix: ${{ steps.vars.outputs.image-prefix }}"
-          echo "Image Tag: ${{ github.sha }}"
-          
-      # Étape 8 : Publier l'image Docker sur ECR
       - name: Publish Docker image
         id: publish-image
         uses: ./.github/actions/publish-api-image
         with:
-          maven-environment: ${{ steps.vars.outputs.environment }}
           dockerfile: './Dockerfile'
-          main-class: "fplarache.smartlib.notifications"
-          image-short-name: repo
-          image-prefix: "${{ env.ENVIRONMENT }}-fpl-larache-smart-lib-service-notification-repo"
+          image-prefix: "${{ env.fullServiceName }}"
           image-tag: ${{ github.sha }}
           ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
-      # Étape 9 : Déployer sur ECS
       - name: Deploy ECS service
-        env:
-          ECS_CLUSTER: ${{ steps.vars.outputs.fullServiceName }}-fgcluster
-          ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-service
+        if: env.ENVIRONMENT != 'unknown'
         run: |
-          echo "Triggering ECS deployment..."
           TASK_JSON=$(aws ecs update-service \
             --force-new-deployment \
-            --cluster ${ECS_CLUSTER} \
-            --service ${ECS_SERVICE})
-          TASK_ARN=$(printf '%s' "${TASK_JSON}" | jq -r '.service.deployments[0].id')
-          echo "deployment-arn=${TASK_ARN}" >> $GITHUB_OUTPUT
+            --cluster "${{ env.fullServiceName }}-fgcluster" \
+            --service "${{ env.fullServiceName }}-service")
+          TASK_ARN=$(echo "${TASK_JSON}" | jq -r '.service.deployments[0].id')
+          echo "deployment-arn=${TASK_ARN}" >> $GITHUB_ENV
