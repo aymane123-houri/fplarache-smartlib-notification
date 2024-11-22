@@ -58,6 +58,7 @@ jobs:
             echo "awsSecretKey=PROD_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
             echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
             echo "aspnetCoreEnvironment=Production" >> $GITHUB_OUTPUT
+          fi
             
           echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
 # Étape temporaire pour vérifier les clés
