@@ -39,16 +39,23 @@ jobs:
       - name: Set environment variables
         id: vars
         env:
-          ENVIRONMENT: dev-fplarache
+          ENVIRONMENT: ${{ steps.extract_env.outputs.environment }}
           APPLICATION: smartlib
           SERVICE: notification
         run: |
           echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
+          echo "application=${APPLICATION}" >> $GITHUB_OUTPUT
           echo "service=${SERVICE}" >> $GITHUB_OUTPUT
-
-          echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
-          echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
-          echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
+          if [ "${ENVIRONMENT}" = "dev" ]; then
+            echo "awsAccessKey=DEV_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
+            echo "awsSecretKey=DEV_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
+            echo "awsDefaultRegion=eu-north-1" >> $GITHUB_OUTPUT
+            echo "aspnetCoreEnvironment=Development" >> $GITHUB_OUTPUT
+          elif [ "${ENVIRONMENT}" = "prod" ]; then
+            echo "awsAccessKey=PROD_ADMIN_AWS_ACCESS_KEY" >> $GITHUB_OUTPUT
+            echo "awsSecretKey=PROD_ADMIN_AWS_SECRET_KEY" >> $GITHUB_OUTPUT
+            echo "awsDefaultRegion=eu-west-1" >> $GITHUB_OUTPUT
+            echo "aspnetCoreEnvironment=Production" >> $GITHUB_OUTPUT
             
           echo "fullServiceName=${ENVIRONMENT}-${APPLICATION}-${SERVICE}" >> $GITHUB_OUTPUT
 # Étape temporaire pour vérifier les clés
