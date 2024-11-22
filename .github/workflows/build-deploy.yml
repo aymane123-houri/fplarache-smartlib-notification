@@ -102,6 +102,13 @@ jobs:
       - name: Build Java application
         run: mvn clean package -DskipTests
 
+
+      - name: Debug Variables
+        run: |
+          echo "Environment: ${{ steps.vars.outputs.environment }}"
+          echo "Image Prefix: ${{ steps.vars.outputs.image-prefix }}"
+          echo "Image Tag: ${{ github.sha }}"
+          
       # Étape 8 : Publier l'image Docker sur ECR
       - name: Publish Docker image
         id: publish-image
