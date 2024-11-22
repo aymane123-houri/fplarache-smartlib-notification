@@ -58,7 +58,7 @@ jobs:
       - name: Set environment variables
         id: vars
         env:
-          ENVIRONMENT: ${{ steps.split_pre.outputs._2 }} 
+          ENVIRONMENT: ${{ steps.split_pre.outputs._1 }} 
           APPLICATION: smartlib
           SERVICE: notification
         run: |
