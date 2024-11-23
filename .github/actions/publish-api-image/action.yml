@@ -36,6 +36,14 @@ inputs:
     description: 'Maven build environment'
     required: true
 
+  aws-access-key-id:
+    description: 'AWS Access Key ID'
+    required: true
+
+  aws-secret-access-key:
+    description: 'AWS Secret Access Key'
+    required: true
+
 runs:
   using: "composite"
   steps:
