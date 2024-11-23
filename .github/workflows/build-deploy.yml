@@ -149,5 +149,7 @@ jobs:
           image-prefix: "${{ steps.vars.outputs.fullServiceName }}-repo"
           image-tag: ${{ github.sha }}
           ecr-registry: ${{ steps.login-ecr.outputs.registry }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_SQS }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SQS }}
 
 
