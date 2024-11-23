@@ -11,22 +11,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SqsConfig {
 
-    @Value("${aws.accessKeyId}")
-    private String accessKeyId;
-
-    @Value("${aws.secretAccessKey}")
-    private String secretAccessKey;
-
-    @Value("${aws.region}")
-    private String region ;
+        @Value("${aws.region}")
+    private String region;
 
     @Bean
     public SqsClient sqsClient() {
         return SqsClient.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)
-                ))
                 .build();
     }
 }
