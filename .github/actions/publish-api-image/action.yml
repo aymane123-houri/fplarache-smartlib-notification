@@ -65,5 +65,5 @@ runs:
           -t $IMAGENAME:latest .
         
         echo "Pushing Docker image to ECR..."
-        docker login -u AWS -p ${{ secrets.AWS_ACCESS_KEY_ID_SQS }} https://${{ inputs.ecr-registry }}
+        docker login -u AWS -p ${{ inputs.aws-access-key-id }} https://${{ inputs.ecr-registry }}
         docker push $IMAGENAME:latest
