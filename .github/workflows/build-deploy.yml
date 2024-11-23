@@ -152,4 +152,16 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_SQS }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SQS }}
 
-
+# Étape 9 : Déployer sur ECS
+      - name: Deploy ECS service
+        env:
+          ECS_CLUSTER: ${{ steps.vars.outputs.fullServiceName }}-fgcluster
+          ECS_SERVICE: ${{ steps.vars.outputs.fullServiceName }}-fgservice
+        run: |
+          echo "Triggering ECS deployment..."
+          TASK_JSON=$(aws ecs update-service \
+            --force-new-deployment \
+            --cluster ${ECS_CLUSTER} \
+            --service ${ECS_SERVICE})
+          TASK_ARN=$(printf '%s' "${TASK_JSON}" | jq -r '.service.deployments[0].id')
+          echo "deployment-arn=${TASK_ARN}" >> $GITHUB_OUTPUT
