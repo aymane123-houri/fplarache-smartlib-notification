@@ -24,6 +24,7 @@ inputs:
   image-tag:
     description: 'Tag for the Docker image'
     required: true
+    default: 'latest'
     
 
   ecr-registry:
@@ -50,12 +51,11 @@ runs:
         docker build \
           --build-arg JAVA_MAIN_CLASS=${{ inputs.main-class }} \
           -f ${{ inputs.dockerfile }} \
-          -t $IMAGENAME:${{ inputs.image-tag }} .
+          -t $IMAGENAME:latest .
         
         echo "Tagging Docker image..."
         docker tag $IMAGENAME:${{ inputs.image-tag }} $IMAGENAME:latest
         
         echo "Pushing Docker image to ECR..."
         docker login
-        docker push $IMAGENAME:${{ inputs.image-tag }}
         docker push $IMAGENAME:latest
