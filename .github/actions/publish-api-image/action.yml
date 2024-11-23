@@ -56,5 +56,4 @@ runs:
         
         echo "Pushing Docker image to ECR..."
         docker login
-        docker push $IMAGENAME:${{ inputs.image-tag }}
         docker push $IMAGENAME:latest
