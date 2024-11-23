@@ -50,6 +50,8 @@ runs:
         echo "Building Docker image..."
         docker build \
           --build-arg JAVA_MAIN_CLASS=${{ inputs.main-class }} \
+          --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_SQS }} \
+          --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_SQS }} \
           -f ${{ inputs.dockerfile }} \
           -t $IMAGENAME:${{ inputs.image-tag }} \
           -t $IMAGENAME:latest .
